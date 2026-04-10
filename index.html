@@ -231,6 +231,7 @@
 
   .filter-btn .dot.creator-dot { background: var(--creator); }
   .filter-btn .dot.testphase-dot { background: var(--testphase); }
+  .filter-btn .dot.note-dot { background: #fbbf24; }
 
   /* === LIST === */
   .list {
@@ -620,6 +621,7 @@
     <button class="filter-btn active" data-filter="all">Alle</button>
     <button class="filter-btn" data-filter="creator"><span class="dot creator-dot"></span>Creator</button>
     <button class="filter-btn" data-filter="testphase"><span class="dot testphase-dot"></span>Testphase</button>
+    <button class="filter-btn" data-filter="notes"><span class="dot note-dot"></span>Mit Notiz</button>
   </div>
 </header>
 
@@ -803,7 +805,10 @@ function render() {
   const q = document.getElementById('search').value.toLowerCase().trim();
   let filtered = allCreators;
 
-  if (activeFilter !== 'all') {
+  if (activeFilter === 'notes') {
+    var notes = getNotes();
+    filtered = filtered.filter(c => notes[c.handle] && notes[c.handle].trim());
+  } else if (activeFilter !== 'all') {
     filtered = filtered.filter(c => c.status === activeFilter);
   }
   if (q) {
