@@ -457,18 +457,73 @@
     color: #fbbf24;
   }
 
-  .note-area {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+  .note-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 0;
-    margin-top: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
   }
 
-  .note-area.open {
-    max-height: 160px;
+  .note-overlay.open {
     opacity: 1;
-    margin-top: 10px;
+    visibility: visible;
+  }
+
+  .note-modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: calc(100% - 48px);
+    max-width: 400px;
+    padding: 20px;
+    position: relative;
+    transform: translateY(16px) scale(0.97);
+    transition: transform 0.25s ease;
+  }
+
+  .note-overlay.open .note-modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .note-modal-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px;
+    padding-right: 28px;
+  }
+
+  .note-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    transition: all 0.15s ease;
+    padding: 0;
+  }
+
+  .note-close:hover, .note-close:active {
+    background: rgba(255,255,255,0.12);
+    color: var(--text);
   }
 
   .note-input {
@@ -476,15 +531,15 @@
     background: rgba(255,255,255,0.04);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    font-size: 13px;
+    padding: 12px 14px;
+    font-size: 14px;
     font-weight: 400;
     color: var(--text);
     font-family: inherit;
     outline: none;
     resize: none;
-    height: 70px;
-    line-height: 1.4;
+    height: 120px;
+    line-height: 1.5;
     transition: border-color 0.2s;
   }
 
@@ -574,6 +629,14 @@
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>
 </button>
 
+<div class="note-overlay" id="noteOverlay">
+  <div class="note-modal">
+    <div class="note-modal-title" id="noteModalTitle"></div>
+    <button class="note-close" id="noteClose">&times;</button>
+    <textarea class="note-input" id="noteModalInput" placeholder="Notiz hinzufugen..."></textarea>
+  </div>
+</div>
+
 <script>
 const API = 'https://primary-production-fd8f.up.railway.app/webhook/creators';
 let allCreators = [];
@@ -628,6 +691,56 @@ function saveNote(handle, text) {
   localStorage.setItem('creatorNotes', JSON.stringify(notes));
 }
 
+var _noteModalTimer;
+var _noteModalHandle = null;
+var _noteModalBtn = null;
+
+function openNoteModal(handle, name, btn) {
+  var overlay = document.getElementById('noteOverlay');
+  var input = document.getElementById('noteModalInput');
+  var title = document.getElementById('noteModalTitle');
+  _noteModalHandle = handle;
+  _noteModalBtn = btn;
+  title.textContent = 'Notiz — ' + name;
+  input.value = getNotes()[handle] || '';
+  overlay.classList.add('open');
+  setTimeout(function() { input.focus(); }, 120);
+}
+
+function closeNoteModal() {
+  var overlay = document.getElementById('noteOverlay');
+  overlay.classList.remove('open');
+  _noteModalHandle = null;
+  _noteModalBtn = null;
+}
+
+// Wire up modal close + auto-save
+document.addEventListener('DOMContentLoaded', function() {
+  var overlay = document.getElementById('noteOverlay');
+  var closeBtn = document.getElementById('noteClose');
+  var input = document.getElementById('noteModalInput');
+
+  closeBtn.addEventListener('click', closeNoteModal);
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeNoteModal();
+  });
+
+  input.addEventListener('input', function() {
+    clearTimeout(_noteModalTimer);
+    _noteModalTimer = setTimeout(function() {
+      if (!_noteModalHandle) return;
+      saveNote(_noteModalHandle, input.value);
+      if (_noteModalBtn) {
+        var filled = !!(input.value.trim());
+        _noteModalBtn.className = 'note-toggle' + (filled ? ' has-note' : '');
+        _noteModalBtn.textContent = '';
+        _noteModalBtn.appendChild(filled ? SVG.noteFilled() : SVG.noteEmpty());
+      }
+    }, 500);
+  });
+});
+
 function buildCard(c, i) {
   const card = el('div', { class: 'card', 'data-status': c.status });
   card.style.animationDelay = (i * 0.04) + 's';
@@ -673,40 +786,14 @@ function buildCard(c, i) {
     actions.appendChild(el('a', { href: c.secUrl, target: '_blank', class: 'social-link ' + c.secType }, [SVG[c.secType]()]));
   }
 
-  // Note area (hidden by default)
-  var noteArea = el('div', { class: 'note-area' });
-  var noteInput = el('textarea', { class: 'note-input', placeholder: 'Notiz hinzufugen...' });
-  noteInput.value = notes[c.handle] || '';
-  noteArea.appendChild(noteInput);
-
-  // Toggle note area on button click
+  // Open note modal on button click
   noteBtn.addEventListener('click', function(e) {
     e.stopPropagation();
-    noteArea.classList.toggle('open');
-    if (noteArea.classList.contains('open')) {
-      setTimeout(function() { noteInput.focus(); }, 100);
-    }
-  });
-
-  // Auto-save note (debounced)
-  var noteTimer;
-  noteInput.addEventListener('input', function() {
-    clearTimeout(noteTimer);
-    var handle = c.handle;
-    var input = noteInput;
-    var btn = noteBtn;
-    noteTimer = setTimeout(function() {
-      saveNote(handle, input.value);
-      var filled = !!(input.value.trim());
-      btn.className = 'note-toggle' + (filled ? ' has-note' : '');
-      btn.textContent = '';
-      btn.appendChild(filled ? SVG.noteFilled() : SVG.noteEmpty());
-    }, 500);
+    openNoteModal(c.handle, c.name, noteBtn);
   });
 
   body.appendChild(top);
   body.appendChild(actions);
-  body.appendChild(noteArea);
   card.appendChild(rail);
   card.appendChild(body);
   return card;
