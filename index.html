@@ -101,7 +101,10 @@
     -webkit-backdrop-filter: blur(30px) saturate(1.6);
     border-bottom: 1px solid var(--border);
     padding: 16px 20px 0;
+    transition: transform 0.3s ease;
   }
+
+  .header.hidden { transform: translateY(-100%); }
 
   .header-top {
     display: flex;
@@ -428,6 +431,68 @@
   .social-link.pinterest { color: #fb7185; border-color: rgba(251,113,133,0.18); }
   .social-link.snapchat { color: #fde047; border-color: rgba(253,224,71,0.18); }
 
+  /* === NOTES === */
+  .note-toggle {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    opacity: 0.35;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+
+  .note-toggle:active { transform: scale(0.9); }
+  .note-toggle svg { width: 16px; height: 16px; }
+
+  .note-toggle.has-note {
+    opacity: 1;
+    color: #fbbf24;
+  }
+
+  .note-area {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    margin-top: 0;
+  }
+
+  .note-area.open {
+    max-height: 160px;
+    opacity: 1;
+    margin-top: 10px;
+  }
+
+  .note-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    resize: none;
+    height: 70px;
+    line-height: 1.4;
+    transition: border-color 0.2s;
+  }
+
+  .note-input::placeholder { color: var(--text-muted); font-weight: 300; }
+  .note-input:focus {
+    border-color: rgba(251, 191, 36, 0.4);
+  }
+
   /* === STATES === */
   .empty {
     text-align: center;
@@ -547,8 +612,21 @@ const SVG = {
   youtube: () => svgIcon('<svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'),
   pinterest: () => svgIcon('<svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>'),
   snapchat: () => svgIcon('<svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12.959-.289.219-.125.477-.185.684-.185.378 0 .665.211.715.49.039.226-.069.58-.719.885-.6.28-1.41.46-1.75.585l-.035.015c-.12.045-.18.075-.21.135-.045.09-.03.21.015.36a14.7 14.7 0 001.096 2.204c.48.72 1.233 1.545 2.174 2.01.21.105.345.24.345.39 0 .345-.795.63-1.846.795-.18.029-.18.029-.39.584-.09.24-.195.465-.315.585-.255.24-.615.24-.989.24-.33 0-.689-.03-1.11-.09a3.497 3.497 0 00-.57-.045 4.31 4.31 0 00-.765.071c-.57.12-1.17.495-1.905.9-.96.525-2.04 1.02-3.239 1.02-.06 0-.12 0-.195-.015h-.045c-1.17 0-2.235-.48-3.18-.99-.72-.39-1.305-.75-1.875-.87a4.826 4.826 0 00-.78-.075c-.255 0-.51.03-.72.06-.42.06-.81.09-1.125.09-.39 0-.735 0-.975-.24a2.77 2.77 0 01-.33-.6c-.195-.51-.21-.54-.39-.57-1.05-.166-1.83-.45-1.83-.795 0-.15.135-.285.345-.39.93-.465 1.695-1.29 2.175-2.01.36-.54.72-1.245 1.095-2.205.045-.15.06-.27.015-.36-.03-.06-.09-.09-.21-.135l-.039-.016c-.33-.12-1.14-.3-1.74-.585-.495-.225-.853-.57-.72-.885.075-.33.42-.49.72-.49.18 0 .42.06.63.18.319.18.659.289.959.289.195 0 .315-.045.39-.09-.007-.165-.019-.33-.03-.51l-.002-.06c-.105-1.628-.23-3.654.3-4.846C4.94 1.076 8.297.793 9.286.793h.015c.93 0 1.95.06 2.905.06z"/></svg>'),
-  phone: () => svgIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>')
+  phone: () => svgIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>'),
+  noteEmpty: () => svgIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'),
+  noteFilled: () => svgIcon('<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-2 15H8v-1h4v1zm2-3H8v-1h6v1zm0-3H8V10h6v1zm-1-4V3.5L18.5 9H13z"/></svg>')
 };
+
+// --- Notes localStorage ---
+function getNotes() {
+  try { return JSON.parse(localStorage.getItem('creatorNotes') || '{}'); } catch(e) { return {}; }
+}
+
+function saveNote(handle, text) {
+  var notes = getNotes();
+  if (text.trim()) { notes[handle] = text; } else { delete notes[handle]; }
+  localStorage.setItem('creatorNotes', JSON.stringify(notes));
+}
 
 function buildCard(c, i) {
   const card = el('div', { class: 'card', 'data-status': c.status });
@@ -565,7 +643,13 @@ function buildCard(c, i) {
   const handleEl = el('div', { class: 'card-handle' }, '@' + c.handle);
   const info = el('div', { class: 'card-info' }, [nameEl, handleEl]);
   const badge = el('span', { class: 'status-badge ' + c.status }, c.status === 'testphase' ? 'Test' : 'Active');
-  const top = el('div', { class: 'card-top' }, [info, badge]);
+
+  // Note toggle button
+  var notes = getNotes();
+  var hasNote = !!(notes[c.handle] && notes[c.handle].trim());
+  var noteBtn = el('button', { class: 'note-toggle' + (hasNote ? ' has-note' : '') }, [hasNote ? SVG.noteFilled() : SVG.noteEmpty()]);
+
+  const top = el('div', { class: 'card-top' }, [info, noteBtn, badge]);
 
   // Actions: TikTok (primary) + WhatsApp (icon) + 2nd platform (icon)
   const actions = el('div', { class: 'actions' });
@@ -589,8 +673,40 @@ function buildCard(c, i) {
     actions.appendChild(el('a', { href: c.secUrl, target: '_blank', class: 'social-link ' + c.secType }, [SVG[c.secType]()]));
   }
 
+  // Note area (hidden by default)
+  var noteArea = el('div', { class: 'note-area' });
+  var noteInput = el('textarea', { class: 'note-input', placeholder: 'Notiz hinzufugen...' });
+  noteInput.value = notes[c.handle] || '';
+  noteArea.appendChild(noteInput);
+
+  // Toggle note area on button click
+  noteBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    noteArea.classList.toggle('open');
+    if (noteArea.classList.contains('open')) {
+      setTimeout(function() { noteInput.focus(); }, 100);
+    }
+  });
+
+  // Auto-save note (debounced)
+  var noteTimer;
+  noteInput.addEventListener('input', function() {
+    clearTimeout(noteTimer);
+    var handle = c.handle;
+    var input = noteInput;
+    var btn = noteBtn;
+    noteTimer = setTimeout(function() {
+      saveNote(handle, input.value);
+      var filled = !!(input.value.trim());
+      btn.className = 'note-toggle' + (filled ? ' has-note' : '');
+      btn.textContent = '';
+      btn.appendChild(filled ? SVG.noteFilled() : SVG.noteEmpty());
+    }, 500);
+  });
+
   body.appendChild(top);
   body.appendChild(actions);
+  body.appendChild(noteArea);
   card.appendChild(rail);
   card.appendChild(body);
   return card;
@@ -659,8 +775,27 @@ document.getElementById('scrollTop').addEventListener('click', function() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+// Header auto-hide on scroll
+var lastScrollY = 0;
+var headerEl = document.querySelector('.header');
+var searchEl = document.getElementById('search');
+
 window.addEventListener('scroll', function() {
-  document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
+  var sy = window.scrollY;
+  document.getElementById('scrollTop').classList.toggle('visible', sy > 400);
+
+  // Don't hide header if search is focused
+  if (document.activeElement === searchEl) {
+    lastScrollY = sy;
+    return;
+  }
+
+  if (sy > lastScrollY && sy > 80) {
+    headerEl.classList.add('hidden');
+  } else if (sy < lastScrollY) {
+    headerEl.classList.remove('hidden');
+  }
+  lastScrollY = sy;
 }, { passive: true });
 
 fetch(API)
