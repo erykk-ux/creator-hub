@@ -274,31 +274,27 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
+  /* === CARD LAYOUT === */
+  .card { padding-left: 0; display: flex; gap: 0; }
+
+  .status-rail {
+    width: 4px;
+    flex-shrink: 0;
+    border-radius: 20px 0 0 20px;
+    background: linear-gradient(180deg, #7c3aed, #a78bfa);
+  }
+
+  .card[data-status="testphase"] .status-rail {
+    background: linear-gradient(180deg, #d97706, #f0a674);
+  }
+
+  .card-body { flex: 1; min-width: 0; padding: 16px 16px 16px 14px; }
+
   .card-top {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 14px;
-  }
-
-  .avatar {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 16px;
-    flex-shrink: 0;
-    color: #fff;
-    background: linear-gradient(135deg, #7c3aed, #a78bfa);
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
-  }
-
-  .avatar.testphase {
-    background: linear-gradient(135deg, #d97706, #f0a674);
-    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+    gap: 10px;
+    margin-bottom: 12px;
   }
 
   .card-info { flex: 1; min-width: 0; }
@@ -309,7 +305,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     letter-spacing: 0.01em;
   }
 
@@ -349,7 +345,6 @@
   .actions { display: flex; gap: 8px; }
 
   .action-btn {
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -368,27 +363,53 @@
   }
 
   .action-btn:active { transform: scale(0.95); }
+  .action-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
+  /* TikTok = PRIMARY */
+  .action-btn.tiktok-main {
+    flex: 1.6;
+    background: linear-gradient(135deg, rgba(255,0,79,0.12), rgba(255,107,157,0.08));
+    border-color: rgba(255,0,79,0.25);
+    color: #ff6b9d;
+    font-weight: 600;
+  }
+
+  .action-btn.tiktok-main:active {
+    background: linear-gradient(135deg, rgba(255,0,79,0.2), rgba(255,107,157,0.15));
+    box-shadow: 0 0 20px rgba(255,0,79,0.15);
+  }
+
+  .action-btn.tiktok-main svg { width: 17px; height: 17px; }
+
+  /* WhatsApp = secondary icon */
   .action-btn.whatsapp {
-    background: rgba(37, 211, 102, 0.08);
-    border-color: rgba(37, 211, 102, 0.2);
+    width: 44px;
+    flex-shrink: 0;
+    flex-grow: 0;
+    background: rgba(37, 211, 102, 0.06);
+    border-color: rgba(37, 211, 102, 0.18);
     color: #4ade80;
-    flex: 1.3;
   }
 
   .action-btn.whatsapp:active {
-    background: rgba(37, 211, 102, 0.15);
-    box-shadow: 0 0 16px rgba(37, 211, 102, 0.15);
+    background: rgba(37, 211, 102, 0.12);
   }
 
-  .action-btn.disabled { opacity: 0.25; pointer-events: none; }
-  .action-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .action-btn.no-tiktok {
+    flex: 1;
+    opacity: 0.25;
+    pointer-events: none;
+  }
 
-  .social-links { display: flex; gap: 6px; }
+  .action-btn.disabled { width: 44px; flex-shrink: 0; flex-grow: 0; opacity: 0.2; pointer-events: none; }
 
+  /* Second platform icon */
   .social-link {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    flex-shrink: 0;
+    flex-grow: 0;
+    height: auto;
+    padding: 11px 0;
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
@@ -400,18 +421,12 @@
   }
 
   .social-link:active { transform: scale(0.9); }
-  .social-link svg { width: 17px; height: 17px; }
+  .social-link svg { width: 16px; height: 16px; }
 
-  .social-link.tiktok { color: #ff6b9d; border-color: rgba(255,107,157,0.2); }
-  .social-link.tiktok:active { background: rgba(255,107,157,0.1); box-shadow: 0 0 12px rgba(255,107,157,0.15); }
-  .social-link.instagram { color: #e879a8; border-color: rgba(232,121,168,0.2); }
-  .social-link.instagram:active { background: rgba(232,121,168,0.1); box-shadow: 0 0 12px rgba(232,121,168,0.15); }
-  .social-link.youtube { color: #f87171; border-color: rgba(248,113,113,0.2); }
-  .social-link.youtube:active { background: rgba(248,113,113,0.1); }
-  .social-link.pinterest { color: #fb7185; border-color: rgba(251,113,133,0.2); }
-  .social-link.pinterest:active { background: rgba(251,113,133,0.1); }
-  .social-link.snapchat { color: #fde047; border-color: rgba(253,224,71,0.2); }
-  .social-link.snapchat:active { background: rgba(253,224,71,0.08); }
+  .social-link.instagram { color: #e879a8; border-color: rgba(232,121,168,0.18); }
+  .social-link.youtube { color: #f87171; border-color: rgba(248,113,113,0.18); }
+  .social-link.pinterest { color: #fb7185; border-color: rgba(251,113,133,0.18); }
+  .social-link.snapchat { color: #fde047; border-color: rgba(253,224,71,0.18); }
 
   /* === STATES === */
   .empty {
@@ -535,42 +550,49 @@ const SVG = {
   phone: () => svgIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>')
 };
 
-function getInitials(name) {
-  return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-}
-
 function buildCard(c, i) {
   const card = el('div', { class: 'card', 'data-status': c.status });
   card.style.animationDelay = (i * 0.04) + 's';
 
-  const avatar = el('div', { class: 'avatar' + (c.status === 'testphase' ? ' testphase' : '') }, getInitials(c.name));
+  // Status rail (colored left border)
+  const rail = el('div', { class: 'status-rail' });
+
+  // Card body
+  const body = el('div', { class: 'card-body' });
+
+  // Top row: name + badge
   const nameEl = el('div', { class: 'card-name' }, c.name);
   const handleEl = el('div', { class: 'card-handle' }, '@' + c.handle);
   const info = el('div', { class: 'card-info' }, [nameEl, handleEl]);
   const badge = el('span', { class: 'status-badge ' + c.status }, c.status === 'testphase' ? 'Test' : 'Active');
-  const top = el('div', { class: 'card-top' }, [avatar, info, badge]);
+  const top = el('div', { class: 'card-top' }, [info, badge]);
 
+  // Actions: TikTok (primary) + WhatsApp (icon) + 2nd platform (icon)
   const actions = el('div', { class: 'actions' });
 
-  if (c.phone) {
-    const waBtn = el('a', { href: 'https://wa.me/' + c.phone, target: '_blank', class: 'action-btn whatsapp' }, [SVG.whatsapp(), document.createTextNode('WhatsApp')]);
-    actions.appendChild(waBtn);
-  } else {
-    const noPhone = el('span', { class: 'action-btn disabled' }, [SVG.phone(), document.createTextNode('Keine Nr.')]);
-    actions.appendChild(noPhone);
-  }
-
-  const socials = el('div', { class: 'social-links' });
+  // TikTok = hero button
   if (c.tiktok) {
-    socials.appendChild(el('a', { href: c.tiktok, target: '_blank', class: 'social-link tiktok' }, [SVG.tiktok()]));
-  }
-  if (c.secType && c.secUrl && SVG[c.secType]) {
-    socials.appendChild(el('a', { href: c.secUrl, target: '_blank', class: 'social-link ' + c.secType }, [SVG[c.secType]()]));
+    actions.appendChild(el('a', { href: c.tiktok, target: '_blank', class: 'action-btn tiktok-main' }, [SVG.tiktok(), document.createTextNode('TikTok')]));
+  } else {
+    actions.appendChild(el('span', { class: 'action-btn no-tiktok' }, [SVG.tiktok(), document.createTextNode('TikTok')]));
   }
 
-  actions.appendChild(socials);
-  card.appendChild(top);
-  card.appendChild(actions);
+  // WhatsApp = compact icon
+  if (c.phone) {
+    actions.appendChild(el('a', { href: 'https://wa.me/' + c.phone, target: '_blank', class: 'action-btn whatsapp' }, [SVG.whatsapp()]));
+  } else {
+    actions.appendChild(el('span', { class: 'action-btn disabled' }, [SVG.phone()]));
+  }
+
+  // Second platform = compact icon
+  if (c.secType && c.secUrl && SVG[c.secType]) {
+    actions.appendChild(el('a', { href: c.secUrl, target: '_blank', class: 'social-link ' + c.secType }, [SVG[c.secType]()]));
+  }
+
+  body.appendChild(top);
+  body.appendChild(actions);
+  card.appendChild(rail);
+  card.appendChild(body);
   return card;
 }
 
