@@ -331,7 +331,14 @@
     padding: 5px 10px;
     border-radius: 100px;
     border: 1px solid transparent;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+    background: none;
+    font-family: inherit;
   }
+  .status-badge:active { transform: scale(0.92); }
+  .status-badge.saving { opacity: 0.5; cursor: wait; }
 
   .status-badge.creator {
     background: rgba(167, 139, 250, 0.12);
@@ -641,8 +648,44 @@
 
 <script>
 const API = 'https://primary-production-fd8f.up.railway.app/webhook/creators';
+const STATUS_API = 'https://primary-production-fd8f.up.railway.app/webhook/creators/status';
+const HUB_TOKEN = 'd8a10530725a5ca3dd12fbcadc5b2df90982df0cfb6ec33b';
 let allCreators = [];
 let activeFilter = 'all';
+
+function updateStatusOnServer(tiktokLink, newStatus) {
+  return fetch(STATUS_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Hub-Token': HUB_TOKEN },
+    body: JSON.stringify({ tiktokLink: tiktokLink, status: newStatus })
+  }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  });
+}
+
+function handleStatusToggle(creator, badge, card) {
+  if (badge.classList.contains('saving')) return;
+  var oldStatus = creator.status;
+  var newStatus = oldStatus === 'testphase' ? 'creator' : 'testphase';
+
+  creator.status = newStatus;
+  card.dataset.status = newStatus;
+  badge.className = 'status-badge ' + newStatus + ' saving';
+  badge.textContent = newStatus === 'testphase' ? 'Test' : 'Active';
+
+  updateStatusOnServer(creator.tiktok, newStatus)
+    .then(function() {
+      badge.classList.remove('saving');
+    })
+    .catch(function(err) {
+      creator.status = oldStatus;
+      card.dataset.status = oldStatus;
+      badge.className = 'status-badge ' + oldStatus;
+      badge.textContent = oldStatus === 'testphase' ? 'Test' : 'Active';
+      alert('Status konnte nicht gespeichert werden. ' + err.message);
+    });
+}
 
 function el(tag, attrs, children) {
   const node = document.createElement(tag);
@@ -757,7 +800,11 @@ function buildCard(c, i) {
   const nameEl = el('div', { class: 'card-name' }, c.name);
   const handleEl = el('div', { class: 'card-handle' }, '@' + c.handle);
   const info = el('div', { class: 'card-info' }, [nameEl, handleEl]);
-  const badge = el('span', { class: 'status-badge ' + c.status }, c.status === 'testphase' ? 'Test' : 'Active');
+  const badge = el('button', { class: 'status-badge ' + c.status, title: 'Tippen zum Umschalten' }, c.status === 'testphase' ? 'Test' : 'Active');
+  badge.addEventListener('click', function(e) {
+    e.stopPropagation();
+    handleStatusToggle(c, badge, card);
+  });
 
   // Note toggle button
   var notes = getNotes();
