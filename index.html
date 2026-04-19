@@ -410,6 +410,103 @@
     border-color: rgba(240, 166, 116, 0.2);
   }
 
+  /* === PROGRESS CHIP (testphase videos done) === */
+  .progress-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    padding: 4px 9px;
+    border-radius: 100px;
+    background: rgba(240, 166, 116, 0.14);
+    color: var(--testphase);
+    border: 1px solid rgba(240, 166, 116, 0.28);
+  }
+  .progress-chip.complete {
+    background: rgba(34, 197, 94, 0.14);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.4);
+    animation: pulse-ring 2s ease-in-out infinite;
+  }
+  @keyframes pulse-ring {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.35); }
+    50%      { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+  }
+
+  /* === CONFIRM DIALOG === */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 9, 17, 0.7);
+    backdrop-filter: blur(12px);
+    display: none;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .confirm-overlay.open { display: flex; }
+  .confirm-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    max-width: 360px;
+    width: 100%;
+    padding: 24px 22px 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .confirm-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 6px;
+  }
+  .confirm-body {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin: 0 0 14px;
+  }
+  .confirm-body strong { color: var(--text); font-weight: 600; }
+  .confirm-warning {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #fbbf24;
+    margin: 0 0 14px;
+    line-height: 1.4;
+  }
+  .confirm-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .confirm-btn {
+    flex: 1;
+    padding: 12px 10px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+  }
+  .confirm-btn:active { transform: scale(0.96); }
+  .confirm-btn.primary {
+    background: linear-gradient(135deg, #a78bfa, #c084fc);
+    color: #fff;
+    border-color: transparent;
+    font-weight: 600;
+  }
+
   /* === ACTIONS === */
   .actions { display: flex; gap: 8px; }
 
@@ -701,6 +798,18 @@
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>
 </button>
 
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal">
+    <h3 class="confirm-title" id="confirmTitle">Status ändern?</h3>
+    <p class="confirm-body" id="confirmBody"></p>
+    <div class="confirm-warning" id="confirmWarning" style="display:none;"></div>
+    <div class="confirm-actions">
+      <button class="confirm-btn" id="confirmCancel">Abbrechen</button>
+      <button class="confirm-btn primary" id="confirmPrimary">Umstellen</button>
+    </div>
+  </div>
+</div>
+
 <div class="note-overlay" id="noteOverlay">
   <div class="note-modal">
     <div class="note-modal-title" id="noteModalTitle"></div>
@@ -727,15 +836,64 @@ function updateStatusOnServer(tiktokLink, newStatus) {
   });
 }
 
-function handleStatusToggle(creator, badge, card) {
+function showConfirmDialog(opts) {
+  var overlay = document.getElementById('confirmOverlay');
+  document.getElementById('confirmTitle').textContent = opts.title;
+
+  var bodyEl = document.getElementById('confirmBody');
+  bodyEl.textContent = '';
+  var nameSpan = document.createElement('strong');
+  nameSpan.textContent = opts.creatorName;
+  bodyEl.appendChild(nameSpan);
+  bodyEl.appendChild(document.createElement('br'));
+  bodyEl.appendChild(document.createTextNode(opts.arrow));
+
+  var warnEl = document.getElementById('confirmWarning');
+  if (opts.warning) {
+    warnEl.textContent = opts.warning;
+    warnEl.style.display = 'block';
+  } else {
+    warnEl.style.display = 'none';
+  }
+  document.getElementById('confirmPrimary').textContent = opts.primaryLabel || 'Umstellen';
+  overlay.classList.add('open');
+
+  var primaryBtn = document.getElementById('confirmPrimary');
+  var cancelBtn = document.getElementById('confirmCancel');
+  function cleanup() {
+    overlay.classList.remove('open');
+    primaryBtn.removeEventListener('click', onYes);
+    cancelBtn.removeEventListener('click', onNo);
+    overlay.removeEventListener('click', onBackdrop);
+  }
+  function onYes() { cleanup(); opts.onConfirm && opts.onConfirm(); }
+  function onNo() { cleanup(); }
+  function onBackdrop(e) { if (e.target === overlay) cleanup(); }
+  primaryBtn.addEventListener('click', onYes);
+  cancelBtn.addEventListener('click', onNo);
+  overlay.addEventListener('click', onBackdrop);
+}
+
+function formatGermanDate(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function applyStatusChange(creator, badge, card, newStatus) {
   if (badge.classList.contains('saving')) return;
   var oldStatus = creator.status;
-  var newStatus = oldStatus === 'testphase' ? 'creator' : 'testphase';
 
   creator.status = newStatus;
+  creator.videosDone = null;
+  creator.baseline = null;
   card.dataset.status = newStatus;
   badge.className = 'status-badge ' + newStatus + ' saving';
   badge.textContent = newStatus === 'testphase' ? 'Test' : 'Active';
+
+  var existingChip = card.querySelector('.progress-chip');
+  if (existingChip) existingChip.remove();
 
   updateStatusOnServer(creator.tiktok, newStatus)
     .then(function() {
@@ -748,6 +906,28 @@ function handleStatusToggle(creator, badge, card) {
       badge.textContent = oldStatus === 'testphase' ? 'Test' : 'Active';
       alert('Status konnte nicht gespeichert werden. ' + err.message);
     });
+}
+
+function handleStatusToggle(creator, badge, card) {
+  var oldStatus = creator.status;
+  var newStatus = oldStatus === 'testphase' ? 'creator' : 'testphase';
+  var arrow = (oldStatus === 'testphase' ? 'Testphase' : 'Creator') + ' → ' +
+              (newStatus === 'testphase' ? 'Testphase' : 'Creator');
+
+  var warning = null;
+  if (newStatus === 'testphase' && creator.completedAt) {
+    warning = 'Hatte Testphase am ' + formatGermanDate(creator.completedAt) +
+              ' bereits abgeschlossen. Zähler wird neu gestartet.';
+  }
+
+  showConfirmDialog({
+    title: 'Status ändern?',
+    creatorName: creator.name,
+    arrow: arrow,
+    warning: warning,
+    primaryLabel: 'Umstellen',
+    onConfirm: function() { applyStatusChange(creator, badge, card, newStatus); }
+  });
 }
 
 function el(tag, attrs, children) {
@@ -869,12 +1049,26 @@ function buildCard(c, i) {
     handleStatusToggle(c, badge, card);
   });
 
+  let progressChip = null;
+  if (c.status === 'testphase' && typeof c.videosDone === 'number') {
+    var done = c.videosDone;
+    var required = c.videosRequired || 5;
+    var complete = done >= required;
+    progressChip = el('span', {
+      class: 'progress-chip' + (complete ? ' complete' : ''),
+      title: done + ' von ' + required + ' Testphase-Videos abgegeben'
+    }, complete ? '★ ' + done + '/' + required : 'Test ' + done + '/' + required);
+  }
+
   // Note toggle button
   var notes = getNotes();
   var hasNote = !!(notes[c.handle] && notes[c.handle].trim());
   var noteBtn = el('button', { class: 'note-toggle' + (hasNote ? ' has-note' : '') }, [hasNote ? SVG.noteFilled() : SVG.noteEmpty()]);
 
-  const top = el('div', { class: 'card-top' }, [info, noteBtn, badge]);
+  const topChildren = [info, noteBtn];
+  if (progressChip) topChildren.push(progressChip);
+  topChildren.push(badge);
+  const top = el('div', { class: 'card-top' }, topChildren);
 
   // Actions: TikTok (primary) + WhatsApp (icon) + 2nd platform (icon)
   const actions = el('div', { class: 'actions' });
