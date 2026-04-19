@@ -148,6 +148,58 @@
     font-weight: 600;
   }
 
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .burger-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
+  }
+  .burger-btn:active { transform: scale(0.93); }
+  .burger-btn span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+  .burger-btn.open {
+    border-color: rgba(167,139,250,0.4);
+    background: rgba(167,139,250,0.1);
+  }
+  .burger-btn.open span { background: #c4b5fd; }
+  .burger-btn.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .burger-btn.open span:nth-child(2) { opacity: 0; }
+  .burger-btn.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  .burger-btn.has-filter::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #c084fc;
+    box-shadow: 0 0 8px rgba(192,132,252,0.6);
+  }
+
   /* === SEARCH === */
   .search-wrap {
     position: relative;
@@ -185,31 +237,37 @@
     background: rgba(255,255,255,0.06);
   }
 
-  /* === FILTERS === */
+  /* === FILTERS (burger dropdown) === */
   .filters {
     display: flex;
-    gap: 8px;
-    padding-bottom: 14px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+    transition: max-height 0.3s ease, padding 0.3s ease;
   }
-  .filters::-webkit-scrollbar { display: none; }
+  .filters.open {
+    max-height: 320px;
+    padding: 4px 0 14px;
+  }
 
   .filter-btn {
-    flex-shrink: 0;
-    padding: 8px 20px;
-    border-radius: 100px;
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 12px;
     border: 1px solid var(--border);
     background: transparent;
     color: var(--text-muted);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 10px;
+    text-align: left;
   }
 
   .filter-btn:active { transform: scale(0.95); }
@@ -618,7 +676,12 @@
 <header class="header">
   <div class="header-top">
     <div class="logo">Creator<span>Hub</span></div>
-    <div class="counter" id="counter">...</div>
+    <div class="header-right">
+      <div class="counter" id="counter">...</div>
+      <button class="burger-btn" id="burgerBtn" aria-label="Filter" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
   <div class="search-wrap">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -895,12 +958,43 @@ function render() {
   );
 })();
 
+function closeBurger() {
+  document.getElementById('filters').classList.remove('open');
+  var bb = document.getElementById('burgerBtn');
+  bb.classList.remove('open');
+  bb.setAttribute('aria-expanded', 'false');
+}
+
+function updateBurgerIndicator() {
+  var bb = document.getElementById('burgerBtn');
+  if (activeFilter && activeFilter !== 'all') bb.classList.add('has-filter');
+  else bb.classList.remove('has-filter');
+}
+
+document.getElementById('burgerBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  var filters = document.getElementById('filters');
+  var opened = filters.classList.toggle('open');
+  this.classList.toggle('open', opened);
+  this.setAttribute('aria-expanded', opened ? 'true' : 'false');
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.header')) closeBurger();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeBurger();
+});
+
 document.getElementById('filters').addEventListener('click', function(e) {
   var btn = e.target.closest('.filter-btn');
   if (!btn) return;
   document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   activeFilter = btn.dataset.filter;
+  updateBurgerIndicator();
+  closeBurger();
   render();
 });
 
