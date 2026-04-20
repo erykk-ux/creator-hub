@@ -874,11 +874,20 @@ function showConfirmDialog(opts) {
   overlay.addEventListener('click', onBackdrop);
 }
 
-function formatGermanDate(iso) {
-  if (!iso) return '';
-  var d = new Date(iso);
-  if (isNaN(d)) return '';
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+function formatGermanDate(val) {
+  if (!val) return '';
+  var s = String(val).trim();
+  if (/^\d{2}:\d{2}\s*-\s*\d{2}\.\d{2}\.\d{4}$/.test(s)) return s;
+  var d = new Date(s);
+  if (isNaN(d)) return s;
+  var parts = new Intl.DateTimeFormat('de-DE', {
+    timeZone: 'Europe/Berlin',
+    hour: '2-digit', minute: '2-digit',
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  }).formatToParts(d);
+  var p = {};
+  parts.forEach(function(x) { p[x.type] = x.value; });
+  return p.hour + ':' + p.minute + ' - ' + p.day + '.' + p.month + '.' + p.year;
 }
 
 function applyStatusChange(creator, badge, card, newStatus) {
