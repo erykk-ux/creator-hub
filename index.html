@@ -1225,10 +1225,22 @@ window.addEventListener('scroll', function() {
   lastScrollY = sy;
 }, { passive: true });
 
+function normalizeUrl(url) {
+  if (!url) return url;
+  var u = String(url).trim();
+  if (!u) return u;
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+  return 'https://' + u.replace(/^\/+/, '');
+}
+
 fetch(API)
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    allCreators = data.creators || [];
+    allCreators = (data.creators || []).map(function(c) {
+      c.tiktok = normalizeUrl(c.tiktok);
+      c.secUrl = normalizeUrl(c.secUrl);
+      return c;
+    });
     allCreators.sort(function(a, b) { return a.name.localeCompare(b.name, 'de'); });
     render();
   })
