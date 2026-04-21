@@ -920,8 +920,7 @@ function applyStatusChange(creator, badge, card, newStatus) {
       card.dataset.status = oldStatus;
       badge.className = 'status-badge ' + oldStatus;
       badge.textContent = oldStatus === 'testphase' ? 'Test' : 'Active';
-      alert('Status konnte nicht gespeichert werden.
-' + (err.name || 'Error') + ': ' + err.message);
+      alert('Status konnte nicht gespeichert werden. ' + (err.name || 'Error') + ': ' + err.message);
     });
 }
 
