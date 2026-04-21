@@ -826,13 +826,19 @@ let allCreators = [];
 let activeFilter = 'all';
 
 function updateStatusOnServer(tiktokLink, newStatus) {
+  var body = JSON.stringify({ tiktokLink: String(tiktokLink || ''), status: String(newStatus || '') });
   return fetch(STATUS_API, {
     method: 'POST',
+    mode: 'cors',
+    credentials: 'omit',
+    cache: 'no-cache',
+    redirect: 'follow',
     headers: { 'Content-Type': 'application/json', 'X-Hub-Token': HUB_TOKEN },
-    body: JSON.stringify({ tiktokLink: tiktokLink, status: newStatus })
+    body: body
   }).then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
+    // Response-Body wird nicht verwendet — Parsing überspringen (Safari-Bug mit n8n-sandbox-CSP)
+    return true;
   });
 }
 
@@ -909,11 +915,13 @@ function applyStatusChange(creator, badge, card, newStatus) {
       badge.classList.remove('saving');
     })
     .catch(function(err) {
+      console.error('Status toggle failed:', err);
       creator.status = oldStatus;
       card.dataset.status = oldStatus;
       badge.className = 'status-badge ' + oldStatus;
       badge.textContent = oldStatus === 'testphase' ? 'Test' : 'Active';
-      alert('Status konnte nicht gespeichert werden. ' + err.message);
+      alert('Status konnte nicht gespeichert werden.
+' + (err.name || 'Error') + ': ' + err.message);
     });
 }
 
